@@ -18,10 +18,11 @@ const Home = () => {
   const [label, setLabel] = useState("");
   const [startGame, setStartGame] = useState(false);
   const [isCanvasReady, setIsCanvasReady] = useState(false);
-  const [endGame, setEndGame] = useState(true);
+  const [endGame, setEndGame] = useState(false);
   const [countdown, setCountdown] = useState(null);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [secondsLeft, setSecondsLeft] = useState(10);
+  const [scoredCurrentEmoji, setScoredCurrentEmoji] = useState(false);
+  // const [secondsLeft, setSecondsLeft] = useState(10);
   const videoRef = useRef(null);
   const intervalRef = useRef(null);
 
@@ -32,8 +33,8 @@ const Home = () => {
     { emoji: "😲", label: "Surprise" },
     { emoji: "😢", label: "Sad" },
     { emoji: "😠", label: "Angry" },
-    { emoji: "🤢", label: "Disgust" },
-    { emoji: "😨", label: "Fear" },
+    // { emoji: "🤢", label: "Disgust" },
+    // { emoji: "😨", label: "Fear" },
   ];
 
   const nextEmoji = useCallback(()=>{
@@ -49,6 +50,7 @@ const Home = () => {
     setLabel(emojiExpressions[nextIndex].label);
     setMatchLabel("");
     setText("");
+    setScoredCurrentEmoji(false);
     setPrediction(0);
   }, [currentIndex, emojiExpressions]);
 
@@ -70,24 +72,24 @@ const Home = () => {
     }
   }, [isCamera]);
 
-  useEffect(() => {
-  if (!isCanvasReady || endGame) return;
+//   useEffect(() => {
+//   if (!isCanvasReady || endGame) return;
 
-  setSecondsLeft(10);
-  setCountdown(true);
+//   setSecondsLeft(10);
+//   setCountdown(true);
 
-  const interval = setInterval(() => {
-    setSecondsLeft(prev => {
-      if (prev === 1) {
-        nextEmoji();
-        return 10;
-      }
-      return prev - 1;
-    });
-  }, 1000);
+//   const interval = setInterval(() => {
+//     setSecondsLeft(prev => {
+//       if (prev === 1) {
+//         nextEmoji();
+//         return 10;
+//       }
+//       return prev - 1;
+//     });
+//   }, 1000);
 
-  return () => clearInterval(interval);
-}, [isCanvasReady, nextEmoji, endGame]);
+//   return () => clearInterval(interval);
+// }, [isCanvasReady, nextEmoji, endGame]);
 
 
   useEffect(()=>{
@@ -141,15 +143,19 @@ const Home = () => {
 
   function checkExpressionMatch(topPrediction, confidence) {
 
+    if(scoredCurrentEmoji) return;
+
     if (topPrediction.toLowerCase() === label.toLowerCase()) {
       if (confidence >= 0.8) {
         setMatchLabel("Perfect Match");
         setBarColor("bg-green-500");
+        setScoredCurrentEmoji(true);
         setScore(prev => prev + 2);
       }
       else if (confidence >= 0.6) {
         setMatchLabel("Good Match");
         setBarColor("bg-yellow-500");
+        setScoredCurrentEmoji(true);
         setScore(prev => prev + 1);
       }
       else {
@@ -243,7 +249,7 @@ const Home = () => {
     setLabel("");
     setCount(1);
     setEndGame(false);
-    setSecondsLeft(10);
+    // setSecondsLeft(10);
     setStartGame(true);
     removeCanvas();
     setIsCanvasReady(false);
@@ -272,7 +278,8 @@ const Home = () => {
 
       {endGame ? (
         <div className='mx-auto flex flex-col gap-4 bg-gray-100 text-black mt-[4%] rounded-xl p-5'>
-          ScoreBoard : {score}
+          <p>You scored: {score} / {emojiExpressions.length * 2}</p>
+          <p>Accuracy: {((score / (emojiExpressions.length * 2)) * 100).toFixed(0)}%</p>
           <img src={confetti} width={300} height={300} alt="Confetti" className='mx-auto' />
           <div className='flex justify-center gap-[2%]'>
             <button onClick={playAgain} className={`py-2 px-5 cursor-pointer text-white bg-purple-500 rounded-lg flex items-center justify-center gap-2`}> <VscDebugRestart />  <span>Play Again</span>  </button>
@@ -302,16 +309,17 @@ const Home = () => {
               {!startGame && <h2 className='relative top-1/2 text-2xl font-bold flex justify-center item-center'>Letss Gooo !! </h2>}
               {startGame && (<>
                 <p className='pt-5 font-bold'>
-                  {countdown && (
+                  {/* {countdown && (
                     <div className="text-lg text-center text-blue-600 font-semibold my-4">
                       Next emoji in {secondsLeft}...
                     </div>
-                  )}
+                  )} */}
                 </p>
                 {startGame && (
                   <strong>Mimic this emoji!</strong>
                 )}
                 <p className='text-[13rem]'> {emoji} </p>
+                <button onClick={nextEmoji} className='py-2 px-5 text-white bg-purple-500 rounded-lg mx-auto flex items-center justify-center gap-2 cursor-pointer'>  <span>Next</span>  </button>
 
 
               </>)}
