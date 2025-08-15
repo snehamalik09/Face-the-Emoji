@@ -1,12 +1,14 @@
 import Navbar from '../Components/Navbar'
-import React, { useEffect, useRef, useCallback, useState } from 'react'
+import React, { useEffect, useRef, useCallback, useState, useContext } from 'react'
 import { VscDebugRestart } from "react-icons/vsc";
 import { RxResume } from "react-icons/rx";
 import { CiCamera } from "react-icons/ci";
 import * as faceapi from 'face-api.js';
 import confetti from '../../src/assets/confetti.gif'
+import { DarkModeContext } from '../context/DarkModeContext.jsx';
 
 const Home = () => {
+  const {darkMode, setDarkMode} = useContext(DarkModeContext);
   const [isCamera, setIsCamera] = useState(false);
   const [text, setText] = useState("");
   const [count, setCount] = useState(1);
@@ -22,7 +24,6 @@ const Home = () => {
   const [countdown, setCountdown] = useState(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [scoredCurrentEmoji, setScoredCurrentEmoji] = useState(false);
-  // const [secondsLeft, setSecondsLeft] = useState(10);
   const videoRef = useRef(null);
   const intervalRef = useRef(null);
 
@@ -71,25 +72,6 @@ const Home = () => {
         .catch((err) => console.error("Error accessing camera:", err));
     }
   }, [isCamera]);
-
-//   useEffect(() => {
-//   if (!isCanvasReady || endGame) return;
-
-//   setSecondsLeft(10);
-//   setCountdown(true);
-
-//   const interval = setInterval(() => {
-//     setSecondsLeft(prev => {
-//       if (prev === 1) {
-//         nextEmoji();
-//         return 10;
-//       }
-//       return prev - 1;
-//     });
-//   }, 1000);
-
-//   return () => clearInterval(interval);
-// }, [isCanvasReady, nextEmoji, endGame]);
 
 
   useEffect(()=>{
@@ -177,8 +159,18 @@ const Home = () => {
     if (document.getElementById("canvas")) return; 
     const canvas = faceapi.createCanvasFromMedia(videoRef.current);
     canvas.id = "canvas";
-    document.body.append(canvas);
-    const displaySize = { width: videoRef.current.videoWidth, height: videoRef.current.videoHeight };
+    // document.body.append(canvas);
+    const container = videoRef.current.parentNode;
+    container.appendChild(canvas);
+    canvas.style.position = "absolute";
+    canvas.style.top = "0";
+    canvas.style.left = "0";
+    canvas.style.width = "100%";
+    canvas.style.height = "100%";
+    const displaySize = {
+      width: videoRef.current.offsetWidth,
+      height: videoRef.current.offsetHeight
+    };
     faceapi.matchDimensions(canvas, displaySize);
     console.log("✅ Canvas created");
 
@@ -273,66 +265,87 @@ const Home = () => {
 
 
   return (
-    <div className='min-h-screen'>
+    <div className={`min-h-screen w-full overflow-x-hidden overflow-y-hidden m-0 p-0 ${
+        darkMode ? 'bg-gray-800 text-white' : 'bg-white text-black'
+      }`}
+>
       <Navbar />
 
       {endGame ? (
-        <div className='mx-auto flex flex-col gap-4 bg-gray-100 text-black mt-[4%] rounded-xl p-5'>
-          <p>You scored: {score} / {emojiExpressions.length * 2}</p>
-          <p>Accuracy: {((score / (emojiExpressions.length * 2)) * 100).toFixed(0)}%</p>
-          <img src={confetti} width={300} height={300} alt="Confetti" className='mx-auto' />
-          <div className='flex justify-center gap-[2%]'>
-            <button onClick={playAgain} className={`py-2 px-5 cursor-pointer text-white bg-purple-500 rounded-lg flex items-center justify-center gap-2`}> <VscDebugRestart />  <span>Play Again</span>  </button>
-          </div>
-        </div>) :
+      <div className={`mx-auto flex flex-col items-center gap-6 mt-[25%] md:mt-[15%] lg:mt-[5%] rounded-xl p-8 shadow-lg w-[80%] md:h-auto max-w-md transition-colors duration-300 
+      ${darkMode ? 'bg-purple-500 text-gray-100' : 'bg-gray-200 text-gray-800'}`}>
+        <h2 className="text-2xl font-bold text-center">🎉 Game Over 🎉</h2>
+
+        <div className="text-center">
+          <p className="md:text-lg font-medium">You scored:</p>
+          <p className={`text-3xl font-extrabold ${darkMode? 'text-yellow-300' : 'text-purple-500'} `}>
+          {score} / {emojiExpressions.length * 2} </p>
+        </div>
+
+        <div className="text-center">
+          <p className="md:text-lg font-medium">Accuracy:</p>
+          <p className={`text-3xl font-extrabold ${darkMode? 'text-yellow-300' : 'text-purple-500'}`}>
+            {((score / (emojiExpressions.length * 2)) * 100).toFixed(0)}% </p>
+        </div>
+
+        <img src={confetti} width={200} height={200} alt="Confetti" className="mx-auto" />
+
+        <button onClick={playAgain} className={`py-3 px-6 cursor-pointer  rounded-lg flex items-center justify-center gap-2 shadow-md transition-all duration-200 ${darkMode? 'bg-white text-purple-500 hover:bg-gray-100 transition-colors duration-300' : 'text-white bg-purple-500 hover:bg-purple-600'}`}>
+          <VscDebugRestart className="text-xl" />
+          <span className="font-semibold">Play Again</span>
+        </button>
+      </div> )
+ :
 
 
-        (<div className='mx-auto flex flex-col gap-4 bg-gray-100 text-black mt-[4%] rounded-xl p-5'>
+        (
+         <div className={`flex flex-col md:gap-4 rounded-xl p-5 mt-[35%] md:mt-[12%] lg:mt-[8%] mx-auto w-[90%] lg:w-[80%] ${darkMode ? 'bg-gray-100 text-gray-100' : 'bg-gray-200 text-gray-800'} `}>
 
-          <div className='flex gap-[2%] justify-center w-full min-h-[60vh]' >
+          <div className='flex lg:flex-row flex-col items-center lg:items-stretch gap-5 lg:gap-[2%] lg:justify-center w-full min-h-[60vh]' >
 
             {!isCamera ? (
-              <div className='w-[43%] min-h-full rounded-2xl bg-gray-800 flex flex-col items-center justify-center gap-5 text-white' >
+              <div className={`lg:w-[43%] w-[90%] lg:min-h-full min-h-[250px] md:min-h-[300px] rounded-2xl flex flex-col items-center justify-center gap-5 ${darkMode ? 'bg-purple-300 text-gray-800' : 'text-white bg-gray-800'}`} >
                 <CiCamera size={32} />
                 <p>Loading Camera...</p>
-                <button onClick={loadModels} className='py-2 px-5 text-white bg-purple-500 rounded-lg flex cursor-pointer'> Allow Camera Access </button>
+                <button onClick={loadModels} className='md:py-2 md:px-5 py-1 px-2 text-xs lg:text-lg text-white bg-purple-500 rounded-lg flex cursor-pointer'> Allow Camera Access </button>
               </div>
             ) :
               (
-                <div className='w-[43%] min-h-full rounded-2xl relative videoContainer' >
+                <div className='lg:w-[43%] w-[90%] lg:min-h-full min-h-[250px] md:min-h-[300px] rounded-2xl relative videoContainer' >
                   <video ref={videoRef} onLoadedData={detectFace} muted autoPlay playsInline className='w-full h-full object-cover rounded-2xl' />
                 </div>
               )}
 
 
-            <div className='w-[43%] bg-white min-h-full text-black rounded-2xl'>
-              {!startGame && <h2 className='relative top-1/2 text-2xl font-bold flex justify-center item-center'>Letss Gooo !! </h2>}
-              {startGame && (<>
-                <p className='pt-5 font-bold'>
-                  {/* {countdown && (
-                    <div className="text-lg text-center text-blue-600 font-semibold my-4">
-                      Next emoji in {secondsLeft}...
-                    </div>
-                  )} */}
-                </p>
+            <div className={`lg:w-[43%] w-[90%] lg:min-h-full min-h-[250px] md:min-h-[300px] rounded-2xl ${darkMode? 'bg-purple-500 text-white' : 'bg-white text-black'} `}>
+              {!startGame && <h2 className='relative lg:top-1/2 top-24 text-2xl font-bold flex justify-center items-center'>Letss Gooo !! </h2>}
+              {startGame && (<div className='flex flex-col justify-center items-center mt-4'>
+
                 {startGame && (
                   <strong>Mimic this emoji!</strong>
                 )}
-                <p className='text-[13rem]'> {emoji} </p>
-                <button onClick={nextEmoji} className='py-2 px-5 text-white bg-purple-500 rounded-lg mx-auto flex items-center justify-center gap-2 cursor-pointer'>  <span>Next</span>  </button>
+                <p className='text-[7rem] lg:text-[13rem]'> {emoji} </p>
+                <button onClick={nextEmoji} className={`md:py-2 md:px-5 py-1 px-2 text-xs lg:text-lg rounded-lg mx-auto flex items-center justify-center gap-2 cursor-pointer ${darkMode? 'bg-white text-purple-500 font-bold' : 'text-white bg-purple-500'} `}>  <span>Next</span>  </button>
 
 
-              </>)}
+              </div>)}
             </div>
 
           </div>
 
 
-          <div className='flex justify-center gap-[2%]'>
-            <button onClick={letStartGame} disabled={startGame} className={`py-2 px-5 text-white bg-purple-500 rounded-lg flex items-center justify-center gap-2 ${startGame ? 'opacity-50 cursor-not-allowed' : "cursor-pointer"}`}> <RxResume />  <span>Start Game</span>  </button>
-            <button onClick={restartGame} disabled={!startGame} className={`py-2 px-5 bg-white rounded-lg flex items-center justify-center gap-2 ${!startGame ? 'opacity-50 cursor-not-allowed' : "cursor-pointer"}  `}> <VscDebugRestart /> <span>Restart</span>  </button>
+          <div className='flex justify-center gap-[6%] lg:gap-[2%] mt-[5%] lg:mt-0'>
+            <button onClick={letStartGame} disabled={startGame} className={`md:py-2 md:px-5 py-1 px-1 text-xs lg:text-lg text-white bg-purple-500 rounded-lg flex items-center justify-center gap-2 ${startGame ? 'opacity-50 cursor-not-allowed' : "cursor-pointer"}`}> <RxResume />  <span>Start Game</span>  </button>
+            <button onClick={restartGame} disabled={!startGame} className={`md:py-2 md:px-5 py-1 px-1 text-xs lg:text-lg rounded-lg flex items-center justify-center gap-2 bg-white ${darkMode ? 'bg-white opacity-100 text-purple-500' : 'bg-white'} ${!startGame ? 'opacity-50 cursor-not-allowed' : "cursor-pointer"}  `}> <VscDebugRestart /> <span>Restart</span>  </button>
           </div>
-        </div>)}
+        </div> 
+
+
+
+
+
+
+      )}
 
     </div>
   )
@@ -340,52 +353,3 @@ const Home = () => {
 
 export default Home
 
-
-
-
-
-
-
-
-          {/* {startGame && (<>
-
-            <div className='bg-white py-2 w-[88%] mx-auto rounded-2xl px-6 flex flex-col gap-3'>
-
-              <div className='flex justify-between'>
-                <p> <strong>Detected :</strong> {text} {prediction == 0 ? "" : (<span> {(prediction * 100).toFixed(0)}%</span>)} </p>
-                <p>{matchLabel}</p>
-              </div>
-              <div className={`w-full h-2  rounded-xl ${prediction > 0 ? barColor : 'bg-white'} `} >  </div>
-            </div>
-
-            <div className='bg-white py-2 w-[88%] mx-auto rounded-2xl px-6 flex flex-col gap-3'>
-              <div className='flex justify-between'>
-                <p> <strong>Score :</strong> {score > 0 && `${(prediction * 10).toFixed(0)}/100`} </p>
-              </div>
-              <div className={`h-2  rounded-xl ${score > 0 ? 'bg-blue-600' : 'bg-white'} w-full `}  >  </div>
-
-              <div className={`h-2  rounded-xl ${score > 0 ? 'bg-blue-600' : 'bg-white'} `} style={{ width: `${(prediction * 10).toFixed(0)}%` }} >  </div>
-            </div>
-
-          </>)} */}
-
-
-  // function randomSelection() {
-  //     const unused = emojiExpressions.filter(e => !usedEmoji.includes(e.label.toLowerCase()));
-  //     if(unused.length==0){
-  //       setEndGame(true);
-  //       return;
-  //     }
-  //     const obj = unused[Math.floor(Math.random() * unused.length)];
-  //     setEmoji(obj.emoji);
-  //     setLabel(obj.label);
-  //     setUsedEmoji(prev => [...prev, obj.label.toLowerCase()]);aa
-  //   }
-
-
-
-  {/* {startGame && (
-                  <button onClick={nextEmoji} className='py-2 px-5 mx-auto mt-4 text-white bg-green-600 rounded-lg'>
-                    Next
-                  </button>
-                )} */}
